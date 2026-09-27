@@ -17,18 +17,16 @@ jobs:
         Restart-Service -Name TermService -Force
 
     - name: Set Fixed Password for runneradmin
-      shell: powershell
-      run: net user runneradmin Laor@001
+      run: |
+        net user runneradmin Laor@001
 
     - name: Install Tailscale
-      shell: powershell
       run: |
         Invoke-WebRequest -Uri "https://tailscale.com" -OutFile "tailscale.msi"
         Start-Process msiexec.exe -ArgumentList "/i", "tailscale.msi", "/quiet", "/norestart" -Wait
         Remove-Item "tailscale.msi" -Force
 
     - name: Establish Tailscale Connection
-      shell: powershell
       run: |
         & "\(env:ProgramFiles\Tailscale\tailscale.exe" up --authkey=\){{ secrets.TAILSCALE_AUTH_KEY }} --hostname=gh-runner-\(env:GITHUB_RUN_ID\)tsIP = \(null\)retries = 0
         while (-not tsIP -and retries -lt 10) {
@@ -40,13 +38,11 @@ jobs:
         echo "TAILSCALE_IP=tsIP" >> env:GITHUB_ENV
 
     - name: Verify RDP Accessibility
-      shell: powershell
       run: |
         testResult = Test-NetConnection -ComputerName env:TAILSCALE_IP -Port 3389
         if (-not \$testResult.TcpTestSucceeded) { exit 1 }
 
     - name: Maintain Connection
-      shell: powershell
       run: |
         Write-Host "`n=== RDP ACCESS ==="
         Write-Host "Address: $env:TAILSCALE_IP"
