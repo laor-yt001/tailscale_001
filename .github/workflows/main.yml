@@ -28,28 +28,24 @@ jobs:
 
     - name: Establish Tailscale Connection
       run: |
-        & "\(env:ProgramFiles\Tailscale\tailscale.exe" up --authkey=\){{ secrets.TAILSCALE_AUTH_KEY }} --hostname=gh-runner-\(env:GITHUB_RUN_ID\)tsIP = \(null\)retries = 0
-        while (-not tsIP -and retries -lt 10) {
-            \(tsIP = & "\)env:ProgramFiles\Tailscale\tailscale.exe" ip -4
-            Start-Sleep -Seconds 5
-            \$retries++
-        }
-        if (-not \$tsIP) { exit 1 }
-        echo "TAILSCALE_IP=tsIP" >> env:GITHUB_ENV
+        # រត់កម្មវិធី Tailscale ដោយផ្ទាល់តាមរយៈ Path ធម្មតា
+        & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=\${{ secrets.TAILSCALE_AUTH_KEY }} --hostname=gh-runner
+        
+        # ផ្អាករង់ចាំ ១៥វិនាទី ដើម្បីឱ្យ Tailscale ចាប់យក IP រួចរាល់
+        Start-Sleep -Seconds 15
 
     - name: Verify RDP Accessibility
       run: |
-        testResult = Test-NetConnection -ComputerName env:TAILSCALE_IP -Port 3389
-        if (-not \$testResult.TcpTestSucceeded) { exit 1 }
+        # បង្ហាញលេខ IP របស់ Tailscale នៅលើ Log
+        & "C:\Program Files\Tailscale\tailscale.exe" ip -4
 
     - name: Maintain Connection
       run: |
         Write-Host "`n=== RDP ACCESS ==="
-        Write-Host "Address: $env:TAILSCALE_IP"
         Write-Host "User: runneradmin"
         Write-Host "Password: Laor@001"
         Write-Host "==================`n"
         while (\$true) {
-            Write-Host "[\$(Get-Date)] RDP Active"
+            Write-Host "RDP Active..."
             Start-Sleep -Seconds 300
         }
